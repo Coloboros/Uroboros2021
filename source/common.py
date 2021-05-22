@@ -6,6 +6,7 @@ from .settings import BASE_DIR, MEDIA_DIR
 
 
 def load_cloud(file_path):
+    print(file_path)
     return np.asarray(o3d.io.read_point_cloud(file_path).points)
 
 
@@ -87,7 +88,7 @@ def load_intersection_cloud_points_from_two_dir(dir_path1, dir_path2):
     ]
     return pts_sens
 
-def m_visualization(pts, smooth = 1):
+def m_visualization(pts, smooth = 1, state=None):
     if smooth != 1:
         pts = pts[[rnd.random() <= smooth for i in range(len(pts))]]
 
@@ -97,12 +98,27 @@ def m_visualization(pts, smooth = 1):
 
     cur_fn = os.path.join(cur_fn_path, 'test.pcd')
 
+    print(pts)
+
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(pts)
     o3d.io.write_point_cloud(cur_fn, pcd)
 
     pcd_load = o3d.io.read_point_cloud(cur_fn)
     o3d.visualization.draw_geometries([pcd_load])
+
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    geometry = o3d.io.read_point_cloud(cur_fn)
+    vis.add_geometry(geometry)
+    if state == 'tof':
+        vc = vis.get_view_control()
+        vc.rotate(0,500)
+        vc.rotate(250,0)
+        vc.rotate(0,250)
+
 
 
 class m_visualization_with_key:
@@ -128,7 +144,7 @@ class m_visualization_with_key:
         if self.smooth != 1:
             pts = pts[[rnd.random() <= self.smooth for i in range(len(pts))]]
 
-        cur_fn_path = os.path.join('media', 'point_cloud_train', 'test')
+        cur_fn_path = os.path.join(MEDIA_DIR, 'point_cloud_train', 'test')
         cur_fn = os.path.join(cur_fn_path, 'test.pcd')
         if not os.path.isdir(cur_fn_path):
             os.mkdir(cur_fn_path)
