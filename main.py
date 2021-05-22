@@ -51,6 +51,8 @@ if __name__ == '__main__':
     #     for s, t in fns_both
     # ]
 
+#%%
+
     def m_visualization(pts, smooth = 1):
         if smooth != 1:
             pts = pts[[rnd.random() <= smooth for i in range(len(pts))]]
@@ -67,38 +69,24 @@ if __name__ == '__main__':
         # # Load saved point cloud and visualize it
         # pcd_load = o3d.io.read_point_cloud(cur_fn)
         o3d.visualization.draw_geometries([pcd])   #[pcd_load])
-    
-    #%%
-    cur_pts = np.asarray(o3d.io.read_point_cloud(fns_both[1][0]).points)
-    m_visualization(cur_pts, .1)
 
-    #%%
-
-    class m_visualization_with_key:
-
-        def __init__(self, pts_lst, smooth = 1):
-            self.smooth = smooth
-            self.pts_lst = pts_lst
-            self.pcds = [self.load_pts(pts) for pts in pts_lst]
+    class Vis_CloudArr:
+        def __init__(self, clouds, smooth = 1):
             self.cur_ind = 0
-
-
+            self.smooth = smooth
+            self.clouds = clouds #self.load_pts(pts_lst)
+            self.smoothed_clouds = []
+            for cloud in self.clouds:
+                self.smoothed_clouds.append(self.load_pts(cloud))
+            
             key_to_callback = {}
             key_to_callback[ord("D")] = self.next
             key_to_callback[ord("A")] = self.prev
-            # key_to_callback[ord("Y")] = self.up
-            # key_to_callback[ord("U")] = self.down
-            # key_to_callback[ord("H")] = self.up
-            # key_to_callback[ord("J")] = self.down
-            # key_to_callback[ord("C")] = self.both
 
-            o3d.visualization.draw_geometries_with_key_callbacks(
-                [self.pcds[self.cur_ind]], key_to_callback,
-
-            )
-
-
+            o3d.visualization.draw_geometries_with_key_callbacks([self.smoothed_clouds[0]],key_to_callback)
+        
         def load_pts(self, pts):
+            #print(pts)
             if self.smooth != 1:
                 pts = pts[[rnd.random() <= self.smooth for i in range(len(pts))]]
 
@@ -107,20 +95,22 @@ if __name__ == '__main__':
             if not os.path.isdir(cur_fn_path):
                 os.mkdir(cur_fn_path)
 
+            #print(pts)
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(pts)
-            # o3d.io.write_point_cloud(cur_fn, pcd)
 
-            # return o3d.io.read_point_cloud(cur_fn)
             return pcd
-
 
         def refresh(self, vis):
             vis.clear_geometries()
-            vis.add_geometry(self.pcds[self.cur_ind])
+            vis.add_geometry(self.smoothed_clouds[self.cur_ind])
+            vc = vis.get_view_control()
+            vc.rotate(0,500)
+            vc.rotate(250,0)
+            vc.rotate(0,250)
 
         def next(self, vis):
-            if self.cur_ind < len(self.pcds) - 1:
+            if self.cur_ind < len(self.smoothed_clouds) - 1:
                 self.cur_ind += 1
             self.refresh(vis)
             return False
@@ -130,43 +120,7 @@ if __name__ == '__main__':
                 self.cur_ind -= 1
             self.refresh(vis)
             return False
-
-        def load_all(self, vis):
-            vis.clear_geometries()
-            vis.add_geometry(self.pcds[0])
-            vis.add_geometry(self.pcds[1])
-
-
-        def up(self, vis):
-            self.pts_lst[0][..., 2] += .1
-            self.pcds[0] = self.load_pts(self.pts_lst[0])
-            self.load_all(vis)
-            return False
-
-        def down(self, vis):
-            self.pts_lst[0][..., 2] -= .1
-            self.pcds[0] = self.load_pts(self.pts_lst[0])
-            self.load_all(vis)
-            return False
-
-
-        def left(self, vis):
-            self.pts_lst[0][..., 1] += .1
-            self.pcds[0] = self.load_pts(self.pts_lst[0])
-            self.load_all(vis)
-            return False
-
-        def right(self, vis):
-            self.pts_lst[0][..., 1] -= .1
-            self.pcds[0] = self.load_pts(self.pts_lst[0])
-            self.load_all(vis)
-            return False
-
-
-        def both(self, vis):
-            self.load_all(vis)
-            return False
-
+        
     #%%
 
     def detach_ground(pts):
@@ -176,6 +130,12 @@ if __name__ == '__main__':
 
     def get_obj_meta(me):
         pass
+    
+    #%%
+    cur_pts = np.asarray(o3d.io.read_point_cloud(fns_both[1][0]).points)
+    Vis_CloudArr(pts_sens, .1)
+
+    #%%
 
     cur_pts = np.asarray(pts_sens[0])
     cur_pts_without_ground, ground_pts = detach_ground(cur_pts)
