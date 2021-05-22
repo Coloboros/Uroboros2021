@@ -62,11 +62,11 @@ if __name__ == '__main__':
 
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(pts)
-        o3d.io.write_point_cloud(cur_fn, pcd)
+        # o3d.io.write_point_cloud(cur_fn, pcd)
 
-        # Load saved point cloud and visualize it
-        pcd_load = o3d.io.read_point_cloud(cur_fn)
-        o3d.visualization.draw_geometries([pcd_load])
+        # # Load saved point cloud and visualize it
+        # pcd_load = o3d.io.read_point_cloud(cur_fn)
+        o3d.visualization.draw_geometries([pcd])   #[pcd_load])
     
     #%%
     cur_pts = np.asarray(o3d.io.read_point_cloud(fns_both[1][0]).points)
@@ -109,9 +109,10 @@ if __name__ == '__main__':
 
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(pts)
-            o3d.io.write_point_cloud(cur_fn, pcd)
+            # o3d.io.write_point_cloud(cur_fn, pcd)
 
-            return o3d.io.read_point_cloud(cur_fn)
+            # return o3d.io.read_point_cloud(cur_fn)
+            return pcd
 
 
         def refresh(self, vis):
