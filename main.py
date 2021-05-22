@@ -4,38 +4,34 @@ import numpy as np
 from numpy.lib.npyio import load
 import open3d as o3d
 import os
-import random as rnd
-from scipy import stats
 import matplotlib.pyplot as plt
+from source.common import *
+from source.settings import MEDIA_DIR, BASE_DIR
+from time import sleep
+
+#%%
+stereo_dir = os.path.join(MEDIA_DIR, 'point_cloud_train', 'clouds_stereo')
+tof_dir = os.path.join(MEDIA_DIR, 'point_cloud_train', 'clouds_tof')
+
+fns_stereo = get_clouds_names_from_dir(stereo_dir)
+fns_tof = get_clouds_names_from_dir(tof_dir)
+fns_both = get_clouds_names_intersection_from_two_dir(stereo_dir, tof_dir)
+
+# pts_both = load_intersection_cloud_points_from_two_dir(stereo_dir, tof_dir)
 
 #%%
 
-stereo_dir = os.path.join('media', 'point_cloud_train', 'clouds_stereo')
-tof_dir = os.path.join('media', 'point_cloud_train', 'clouds_tof')
+# cur_pts_list = [
+#     load_cloud(f)
+#     for f in fns_stereo[:10]
+# ]
 
-fns_stereo = [os.path.join(stereo_dir, f) for f in
-    os.listdir(stereo_dir)
-    if f.endswith('.pcd') and os.path.isfile(os.path.join(stereo_dir, f))
-]
-fns_tof = [os.path.join(tof_dir, f) for f in
-    os.listdir(tof_dir)
-    if f.endswith('.pcd') and os.path.isfile(os.path.join(tof_dir, f))
-]
+# cur_pts_list_without_ground = [
+#     detach_ground(cur_pts)[0]
+#     for cur_pts in cur_pts_list
+# ]
 
-fns_both = [(s, t, )
-    for s in fns_stereo for t in fns_tof
-    if s.split(os.path.sep)[-1].split('_')[-1] ==
-       t.split(os.path.sep)[-1].split('_')[-1]
-]
-
-pts_sens = [
-    np.concatenate((
-        np.asarray(o3d.io.read_point_cloud(s).points),
-        np.asarray(o3d.io.read_point_cloud(t).points)
-    ), axis=0)
-    for s, t in fns_both
-]
-
+# m_visualization_all(cur_pts_list, state='tof')
 
 #%%
 cur_pts = np.asarray(o3d.io.read_point_cloud(fns_both[1][0]).points)
@@ -43,127 +39,7 @@ m_visualization(cur_pts, .1)
 
 #%%
 
-def m_visualization(pts, smooth = 1):
-    if smooth != 1:
-        pts = pts[[rnd.random() <= smooth for i in range(len(pts))]]
-
-    cur_fn_path = os.path.join('media', 'point_cloud_train', 'test')
-    cur_fn = os.path.join(cur_fn_path, 'test.pcd')
-    if not os.path.isdir(cur_fn_path):
-        os.mkdir(cur_fn_path)
-
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(pts)
-    o3d.io.write_point_cloud(cur_fn, pcd)
-
-    # Load saved point cloud and visualize it
-    pcd_load = o3d.io.read_point_cloud(cur_fn)
-    o3d.visualization.draw_geometries([pcd_load])
-
-
-class m_visualization_with_key:
-
-    def __init__(self, pts_lst, smooth = 1):
-        self.smooth = smooth
-        self.pts_lst = pts_lst
-        self.pcds = [self.load_pts(pts) for pts in pts_lst]
-        self.cur_ind = 0
-
-
-        key_to_callback = {}
-        key_to_callback[ord("D")] = self.next
-        key_to_callback[ord("A")] = self.prev
-        # key_to_callback[ord("Y")] = self.up
-        # key_to_callback[ord("U")] = self.down
-        # key_to_callback[ord("H")] = self.up
-        # key_to_callback[ord("J")] = self.down
-        # key_to_callback[ord("C")] = self.both
-
-        o3d.visualization.draw_geometries_with_key_callbacks(
-            [self.pcds[self.cur_ind]], key_to_callback,
-
-        )
-
-
-    def load_pts(self, pts):
-        if self.smooth != 1:
-            pts = pts[[rnd.random() <= self.smooth for i in range(len(pts))]]
-
-        cur_fn_path = os.path.join('media', 'point_cloud_train', 'test')
-        cur_fn = os.path.join(cur_fn_path, 'test.pcd')
-        if not os.path.isdir(cur_fn_path):
-            os.mkdir(cur_fn_path)
-
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(pts)
-        o3d.io.write_point_cloud(cur_fn, pcd)
-
-        return o3d.io.read_point_cloud(cur_fn)
-
-
-    def refresh(self, vis):
-        vis.clear_geometries()
-        vis.add_geometry(self.pcds[self.cur_ind])
-
-    def next(self, vis):
-        if self.cur_ind < len(self.pcds) - 1:
-            self.cur_ind += 1
-        self.refresh(vis)
-        return False
-
-    def prev(self, vis):
-        if self.cur_ind > 0:
-            self.cur_ind -= 1
-        self.refresh(vis)
-        return False
-
-    def load_all(self, vis):
-        vis.clear_geometries()
-        vis.add_geometry(self.pcds[0])
-        vis.add_geometry(self.pcds[1])
-
-
-    def up(self, vis):
-        self.pts_lst[0][..., 2] += .1
-        self.pcds[0] = self.load_pts(self.pts_lst[0])
-        self.load_all(vis)
-        return False
-
-    def down(self, vis):
-        self.pts_lst[0][..., 2] -= .1
-        self.pcds[0] = self.load_pts(self.pts_lst[0])
-        self.load_all(vis)
-        return False
-
-
-    def left(self, vis):
-        self.pts_lst[0][..., 1] += .1
-        self.pcds[0] = self.load_pts(self.pts_lst[0])
-        self.load_all(vis)
-        return False
-
-    def right(self, vis):
-        self.pts_lst[0][..., 1] -= .1
-        self.pcds[0] = self.load_pts(self.pts_lst[0])
-        self.load_all(vis)
-        return False
-
-
-    def both(self, vis):
-        self.load_all(vis)
-        return False
-
-#%%
-
-def detach_ground(pts):
-    mode_y = int(stats.mode(pts[..., 2])[0])
-    res = (pts[pts[..., 2] < mode_y], pts[pts[..., 2] >= mode_y], )
-    return res
-
-def get_obj_meta(me):
-    pass
-
-cur_pts = np.asarray(pts_sens[0])
+cur_pts = np.asarray(o3d.io.read_point_cloud(fns_tof[1]).points)
 cur_pts_without_ground, ground_pts = detach_ground(cur_pts)
 
 m_visualization(cur_pts, .5)
@@ -175,37 +51,110 @@ for i in range(10):
     print(np.asarray(o3d.io.read_point_cloud(fns_both[i][1]).points).shape)
 
 
-
 #%%
+def get_mtx_front(pts, mm, mtx_size=(64, 56, )):
+    mtx = np.zeros(mtx_size)
 
-def show_pts(pts):
-    fig1 = plt.figure()
-    fig2 = plt.figure()
-    fig3 = plt.figure()
-    axy = fig1.add_subplot()
-    axz = fig2.add_subplot()
-    ayz = fig3.add_subplot()
+    s_x = mm[0]
+    s_z = mm[2]
 
     for i, [xs, ys, zs] in enumerate(pts):
-        if rnd.randint(0, 800) == 228:
-            axy.scatter(xs, ys, marker='o')
-            axz.scatter(xs, zs, marker='o')
-            ayz.scatter(ys, zs, marker='o')
+        x = int(((xs - s_x[0]) / (s_x[1] - s_x[0])) * mtx_size[0])
+        z = int(((zs - s_z[0]) / (s_z[1] - s_z[0])) * mtx_size[1])
+        mtx[x, z] = 1
+
+    return mtx
+
+
+def get_mtx_left(pts, mm, mtx_size=(64, 56, )):
+    mtx = np.zeros(mtx_size)
+
+    s_y = mm[1]
+    s_z = mm[2]
+
+    for i, [xs, ys, zs] in enumerate(pts):
+        y = int(((ys - s_y[0]) / (s_y[1] - s_y[0])) * mtx_size[0])
+        z = int(((zs - s_z[0]) / (s_z[1] - s_z[0])) * mtx_size[1])
+        mtx[y, z] = 1
+
+    return mtx
+
+def filter(mtx):
+    n_mtx = mtx.copy() * 0
+    for i in range(1, mtx.shape[0] - 1):
+        for j in range(1, mtx.shape[1] - 1):
+            if mtx[i, j] == 1 and np.sum(mtx[i-1:i+2, j-1:j+2]) >= 4:
+                n_mtx[i, j] = 1
+    # while(np.sum(n_mtx[:,-2:]) < n_mtx.shape[1] * .1):
+    #     n_mtx = n_mtx[:, :-1]
+    # print(n_mtx.shape)
+    return n_mtx
+
+def show_pts_mtx(pts, mm, mtx_size=(64, 56, )):
+    fig1 = plt.figure()
+    axy = fig1.add_subplot()
+    axy.set_xlim(mm[0])
+    axy.set_ylim(mm[2])
+
+    s_x = mm[0]
+    s_z = mm[2]
+
+    mtx = get_mtx_front(pts, mm, mtx_size)
+    mtx = filter(mtx)
+    mtx_size = mtx.shape
+
+    # print(mtx)
+
+    for i in range(mtx_size[0]):
+        for j in range(mtx_size[1]):
+            if mtx[i, j] == 1:
+                x = i / mtx_size[1] * (s_x[1] - s_x[0]) + s_x[0]
+                z = j / mtx_size[0] * (s_z[1] - s_z[0]) + s_z[0]
+                axy.scatter(x, z, marker='s', c=0, linewidths=.01)
+
 
     axy.set_xlabel('X')
-    axy.set_ylabel('Y')
-    axz.set_xlabel('X')
-    axz.set_ylabel('Z')
-    ayz.set_xlabel('Y')
-    ayz.set_ylabel('Z')
+    axy.set_ylabel('Z')
+
 
     plt.show()
 
-cur_pts = np.asarray(o3d.io.read_point_cloud(fns_both[1][0]).points)
-show_pts(cur_pts)
-without_ground, _ = detach_ground(cur_pts)
-show_pts(without_ground)
+def process(pts, mm, mtx_size=(64, 56, )):
+    front_mtx = filter(get_mtx_front(pts, mm, mtx_size))
+    i = 0
+    while(np.sum(front_mtx[:,-i]) < front_mtx.shape[1] * .1):
+        i+=1
+
+    wall_sum = np.sum(front_mtx[:,-i-7:-i+1]) / 7
+    below_wall_sum = np.sum(front_mtx[:,-i-14:-i-6]) / 7
+    print()
+    print(i)
+    print(wall_sum)
+    print(below_wall_sum)
+    # if wall_sum >
+
+    print(front_mtx)
+
+
+for i in range(40):
+    print(i)
+    cur_pts = np.asarray(o3d.io.read_point_cloud(fns_tof[i]).points)
+    mm = get_min_max(cur_pts)
+    handlel_layer, _ = dtch(cur_pts)
+
+    # mtx_size = (15, 12)
+    process(handlel_layer, mm)
+    show_pts_mtx(handlel_layer, mm)
+    m_visualization(handlel_layer)
+    # show_pts_mtx(only_ground, mm)
+    # show_pts_mtx(without_ground, mm)
+# show_pts(without_ground)
+# show_pts(only_ground)
 
 #%%
-m_visualization(cur_pts, 1 / 300)
-m_visualization(without_ground, 1 / 300)
+cur_pts = np.asarray(o3d.io.read_point_cloud(fns_tof[21]).points)
+m_visualization(cur_pts)
+
+#%%
+# m_visualization(cur_pts, 1 / 300)
+# m_visualization(without_ground, 1 / 300)
