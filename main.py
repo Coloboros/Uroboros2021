@@ -1,5 +1,3 @@
-#%%
-
 import os
 import shutil
 from source.common import *
