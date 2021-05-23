@@ -1,25 +1,26 @@
-import numpy as np
-import copy
-import open3d as o3d
+{
 
-import os
-files = sorted(os.listdir('clouds2'))
-
-vis = o3d.visualization.Visualizer()
-vis.create_window()
-
-geometry = o3d.io.read_point_cloud(f'clouds2\\{files[0]}')
-vis.add_geometry(geometry)
-vc = vis.get_view_control()
-vc.rotate(0,500)
-vc.rotate(250,0)
-vc.rotate(0,250)
-num = 500
-
-for i in range(num):
-    print(i)
-    cloud = o3d.io.read_point_cloud(f'clouds2\\{files[i]}')
-    geometry.points = cloud.points
-    vis.update_geometry(geometry)
-    vis.poll_events()
-    vis.update_renderer()
+    "figures": [
+        {
+            "object": "human",
+            "geometry": {
+                "position": {
+                    "x": 0.3357630615532714,
+                    "y": -0.13002259736800664,
+                    "z": 5.372778393994562
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": -0.24312108870949078,
+                    "z": 0
+                },
+                "dimensions": {
+                    "x": 0.6054959935921507,
+                    "y": 0.40034654024470256,
+                    "z": 1.5175059384053022
+                }
+            },
+            "door": "unknown"
+        }
+    ]
+}

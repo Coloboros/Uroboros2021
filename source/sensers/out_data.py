@@ -1,5 +1,6 @@
 import os
-from .location import Location
+from source.sensers.figure import Figure
+from source.sensers.geometry import Geometry
 
 
 class OutData:
@@ -7,12 +8,16 @@ class OutData:
     Класс хранящий в себе путь до изображения и сопутствующею
     ей метаданные
     """
-    def __init__(self, f_name: str, ground_loc: Location, door_loc:Location, objs_loc):
+    def __init__(self, f_name: str):
         assert os.path.isfile(f_name)
         self.f_name = f_name
-        self.ground_loc = ground_loc
-        self.door_loc = door_loc
-        self.objs_loc = objs_loc
+        self.figures = []
+
+    def add_figure(self, figure: Figure) -> None:
+        """
+        Добавление фигуры к данному объекту
+        """
+        self.figures.append(figure)
 
     def save_file(self, f_path):
         """
@@ -21,9 +26,16 @@ class OutData:
         pass
 
 
-    def prepare4json(self):
+    def to_object(self):
         """
         Возвращает словарь данного объекта, для сохранения в json
         """
-        pass
+        res_dict = {}
+        res_figures_lst = []
+        res_dict['figures'] = res_figures_lst
+
+        for fig in self.figures:
+            res_figures_lst.append(fig.to_object())
+
+        return res_dict
 

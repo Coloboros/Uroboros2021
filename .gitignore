@@ -4,3 +4,4 @@ media/point_cloud_train/clouds_tof
 media/test_img
 media/*.zip
 .vscode
+__pycache__

@@ -1,4 +1,5 @@
-from . import OutData
+from .out_data import OutData
+
 
 class ISens:
     """
