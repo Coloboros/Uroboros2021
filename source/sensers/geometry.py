@@ -61,3 +61,6 @@ class Geometry:
             res_dict['dimensions'] = 'unknown'
 
         return res_dict
+
+
+__all__ = ['Geometry']

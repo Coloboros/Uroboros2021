@@ -5,3 +5,4 @@ media/test_img
 media/*.zip
 .vscode
 __pycache__
+.ipynb_checkpoints

@@ -1,3 +1,14 @@
+"""
+Недокументируемая часть
+
+Помойка полезных функций, в основном
+для визуализации для анализа данных
+для зарождения различных идей
+для реальзации данного кейса
+для решения сложной для нас
+задачи для улучшения своих
+качеств как специалистов своих ролей
+"""
 import numpy as np
 import open3d as o3d
 import random as rnd
@@ -48,11 +59,15 @@ def load_cloud(file_path):
 
 
 def get_clouds_names_from_dir(dir_path):
+    """
+    Получение имён интересующих файлов из директории
+    """
     _dir_path = os.path.join(BASE_DIR, dir_path)
 
     cloud_files_names = sorted([os.path.join(_dir_path, f) for f in
         os.listdir(_dir_path)
-        if f.endswith('.pcd') and os.path.isfile(os.path.join(_dir_path, f))
+        if (f.endswith('.pcd') and os.path.isfile(os.path.join(_dir_path, f))) or
+           (f.endswith('.pcd.zip') and os.path.isfile(os.path.join(_dir_path, f)))
     ])
 
     return cloud_files_names
